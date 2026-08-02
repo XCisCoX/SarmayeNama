@@ -12,6 +12,11 @@
 | Alpha Vantage | https://alphavantage.co | Free tier ≈25 req/day; quotes are delayed, not real-time |
 | CoinGecko | https://www.coingecko.com | Keyless public API; attribution appreciated |
 | FRED | "Federal Reserve Bank of St. Louis, FRED" | Required attribution for FRED series |
+| Finnhub | https://finnhub.io | US stock quotes are real-time on the free plan; attribution requested |
+| EIA | "US Energy Information Administration (EIA)" | Required attribution for EIA series |
+| NewsAPI | https://newsapi.org | Free tier is **non-commercial**; attribution required |
+| Brave Search | https://brave.com/search/api/ | Free tier non-commercial; attribution required |
+| Google Gemini | https://ai.google.dev | AI summaries are labeled as AI-generated, never financial advice |
 
 ## Principles
 

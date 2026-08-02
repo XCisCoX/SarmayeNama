@@ -1,24 +1,60 @@
-# pnpm
+# ── dependencies ──────────────────────────────────────────────────────
 node_modules/
 .pnpm-store/
+.pnpm-debug.log*
 
-# builds
+# ── builds & outputs ───────────────────────────────────────────────────
 dist/
 build/
 .next/
 out/
 *.tsbuildinfo
 coverage/
+playwright-report/
+test-results/
+.blitz/
 
-# env
+# ── environment & secrets (never commit real keys) ─────────────────────
 .env
 .env.local
 .env.*.local
+.env.production
 !.env.example
 
-# misc
-.DS_Store
+# ── Prisma ─────────────────────────────────────────────────────────────
+packages/database/prisma/*.db
+packages/database/prisma/*.db-journal
+
+# ── Next.js ────────────────────────────────────────────────────────────
+next-env.d.ts
+apps/web/.next/
+
+# ── logs & runtime ─────────────────────────────────────────────────────
 *.log
-playwright-report/
-test-results/
+logs/
+*.pid
+*.seed
+*.pid.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── OS / editors ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+.merges
+
+# ── Docker ─────────────────────────────────────────────────────────────
+.docker/
+
+# ── misc ───────────────────────────────────────────────────────────────
 .hermes/
+.vercel
+*.local
