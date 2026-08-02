@@ -1,0 +1,41 @@
+{
+  "name": "sarmaye-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "سرمایه‌نما — Persian financial market dashboard (Iranian markets, FX, precious metals, crypto)",
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:web": "pnpm --filter @sarmaye/web dev",
+    "dev:worker": "pnpm --filter @sarmaye/worker dev",
+    "dev": "pnpm --parallel --filter @sarmaye/web --filter @sarmaye/worker dev",
+    "db:migrate": "pnpm --filter @sarmaye/database db:migrate",
+    "db:deploy": "pnpm --filter @sarmaye/database db:deploy",
+    "db:seed": "pnpm --filter @sarmaye/database db:seed",
+    "db:generate": "pnpm --filter @sarmaye/database db:generate",
+    "db:studio": "pnpm --filter @sarmaye/database db:studio",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm --filter @sarmaye/web lint",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @sarmaye/web test:e2e",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "unrs-resolver",
+      "@tailwindcss/oxide"
+    ]
+  }
+}

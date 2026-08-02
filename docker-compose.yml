@@ -1,0 +1,126 @@
+# SarmayeNama — docker compose
+# Start with:  cp .env.example .env  &&  docker compose up --build
+# PostgreSQL data persists in the `sarmaye-pgdata` volume.
+name: sarmaye
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sarmaye}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sarmaye}
+      POSTGRES_DB: ${POSTGRES_DB:-sarmaye}
+    volumes:
+      - sarmaye-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sarmaye} -d ${POSTGRES_DB:-sarmaye}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    # Expose only for local development; comment out on a locked-down VPS.
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sarmaye}:${POSTGRES_PASSWORD:-sarmaye}@db:5432/${POSTGRES_DB:-sarmaye}
+      BRSAPI_API_KEY: ${BRSAPI_API_KEY:-}
+      NAVASAN_API_KEY: ${NAVASAN_API_KEY:-}
+      METALSDEV_API_KEY: ${METALSDEV_API_KEY:-}
+      ALPHAVANTAGE_API_KEY: ${ALPHAVANTAGE_API_KEY:-}
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY:-}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      NEWS_API_KEY: ${NEWS_API_KEY:-}
+      BRAVE_API_KEY: ${BRAVE_API_KEY:-}
+      NEWS_ENABLED: ${NEWS_ENABLED:-true}
+      NEWS_INTERVAL_MS: ${NEWS_INTERVAL_MS:-2700000}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      FINNHUB_INTERVAL_MS: ${FINNHUB_INTERVAL_MS:-1800000}
+      FINNHUB_DAILY_LIMIT: ${FINNHUB_DAILY_LIMIT:-500}
+      EIA_API_KEY: ${EIA_API_KEY:-}
+      EIA_INTERVAL_MS: ${EIA_INTERVAL_MS:-86400000}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+      GEMINI_SUMMARIES_ENABLED: ${GEMINI_SUMMARIES_ENABLED:-true}
+      GEMINI_INTERVAL_MS: ${GEMINI_INTERVAL_MS:-1800000}
+      IRANIAN_STOCKS_ENABLED: ${IRANIAN_STOCKS_ENABLED:-false}
+      GLOBAL_MARKETS_ENABLED: ${GLOBAL_MARKETS_ENABLED:-false}
+      ECONOMIC_INDICATORS_ENABLED: ${ECONOMIC_INDICATORS_ENABLED:-false}
+      ADMIN_SECRET: ${ADMIN_SECRET:-change-me-admin-secret}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_JSON: ${LOG_JSON:-true}
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sarmaye}:${POSTGRES_PASSWORD:-sarmaye}@db:5432/${POSTGRES_DB:-sarmaye}
+      BRSAPI_API_KEY: ${BRSAPI_API_KEY:-}
+      NAVASAN_API_KEY: ${NAVASAN_API_KEY:-}
+      METALSDEV_API_KEY: ${METALSDEV_API_KEY:-}
+      ALPHAVANTAGE_API_KEY: ${ALPHAVANTAGE_API_KEY:-}
+      COINGECKO_API_KEY: ${COINGECKO_API_KEY:-}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      NEWS_API_KEY: ${NEWS_API_KEY:-}
+      BRAVE_API_KEY: ${BRAVE_API_KEY:-}
+      NEWS_ENABLED: ${NEWS_ENABLED:-true}
+      NEWS_INTERVAL_MS: ${NEWS_INTERVAL_MS:-2700000}
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY:-}
+      FINNHUB_INTERVAL_MS: ${FINNHUB_INTERVAL_MS:-1800000}
+      FINNHUB_DAILY_LIMIT: ${FINNHUB_DAILY_LIMIT:-500}
+      EIA_API_KEY: ${EIA_API_KEY:-}
+      EIA_INTERVAL_MS: ${EIA_INTERVAL_MS:-86400000}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+      GEMINI_SUMMARIES_ENABLED: ${GEMINI_SUMMARIES_ENABLED:-true}
+      GEMINI_INTERVAL_MS: ${GEMINI_INTERVAL_MS:-1800000}
+      IRANIAN_STOCKS_ENABLED: ${IRANIAN_STOCKS_ENABLED:-false}
+      GLOBAL_MARKETS_ENABLED: ${GLOBAL_MARKETS_ENABLED:-false}
+      ECONOMIC_INDICATORS_ENABLED: ${ECONOMIC_INDICATORS_ENABLED:-false}
+      BRSAPI_INTERVAL_MS: ${BRSAPI_INTERVAL_MS:-90000}
+      NAVASAN_INTERVAL_MS: ${NAVASAN_INTERVAL_MS:-600000}
+      TSETMC_INTERVAL_MS: ${TSETMC_INTERVAL_MS:-300000}
+      METALS_INTERVAL_MS: ${METALS_INTERVAL_MS:-21600000}
+      COINGECKO_INTERVAL_MS: ${COINGECKO_INTERVAL_MS:-300000}
+      FRANKFURTER_INTERVAL_MS: ${FRANKFURTER_INTERVAL_MS:-43200000}
+      ALPHAVANTAGE_INTERVAL_MS: ${ALPHAVANTAGE_INTERVAL_MS:-86400000}
+      FRED_INTERVAL_MS: ${FRED_INTERVAL_MS:-86400000}
+      BRSAPI_DAILY_LIMIT: ${BRSAPI_DAILY_LIMIT:-1500}
+      NAVASAN_DAILY_LIMIT: ${NAVASAN_DAILY_LIMIT:-240}
+      METALSDEV_DAILY_LIMIT: ${METALSDEV_DAILY_LIMIT:-20}
+      ALPHAVANTAGE_DAILY_LIMIT: ${ALPHAVANTAGE_DAILY_LIMIT:-25}
+      COINGECKO_DAILY_LIMIT: ${COINGECKO_DAILY_LIMIT:-1000}
+      AGGREGATE_INTERVAL_MS: ${AGGREGATE_INTERVAL_MS:-300000}
+      SNAPSHOT_RETENTION_DAYS: ${SNAPSHOT_RETENTION_DAYS:-90}
+      CIRCUIT_FAILURE_THRESHOLD: ${CIRCUIT_FAILURE_THRESHOLD:-5}
+      CIRCUIT_COOLDOWN_MS: ${CIRCUIT_COOLDOWN_MS:-300000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_JSON: ${LOG_JSON:-true}
+
+volumes:
+  sarmaye-pgdata:

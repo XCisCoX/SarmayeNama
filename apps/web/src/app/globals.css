@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Design tokens — professional financial UI, accessible contrast      */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0f2f5;
+  --color-surface-3: #e8ebf0;
+  --color-border: #d9dde3;
+  --color-border-strong: #c2c8d1;
+  --color-text: #14181f;
+  --color-text-secondary: #4a5464;
+  --color-text-muted: #6b7686;
+  --color-primary: #1a5fb4;
+  --color-primary-soft: #e3ecf8;
+  --color-accent: #7c3aed;
+  --color-up: #0e7a3d;
+  --color-up-soft: #e2f3e8;
+  --color-down: #b4232c;
+  --color-down-soft: #fbe8ea;
+  --color-warning: #b45309;
+  --color-warning-soft: #fdf0dc;
+  --color-danger: #b4232c;
+  --color-focus-ring: #1a5fb4;
+  --font-sans: 'Vazirmatn', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+}
+
+.dark {
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-surface-2: #1c232d;
+  --color-surface-3: #242d3a;
+  --color-border: #2d3747;
+  --color-border-strong: #3d4a5e;
+  --color-text: #e6e9ee;
+  --color-text-secondary: #aab4c2;
+  --color-text-muted: #7f8b9c;
+  --color-primary: #6ea8e6;
+  --color-primary-soft: #182c45;
+  --color-accent: #a78bfa;
+  --color-up: #34d399;
+  --color-up-soft: #0e2e22;
+  --color-down: #f87171;
+  --color-down-soft: #3a1518;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #33260d;
+  --color-danger: #f87171;
+  --color-focus-ring: #6ea8e6;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-2: var(--color-surface-2);
+  --color-surface-3: var(--color-surface-3);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-text: var(--color-text);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-primary: var(--color-primary);
+  --color-primary-soft: var(--color-primary-soft);
+  --color-accent: var(--color-accent);
+  --color-up: var(--color-up);
+  --color-up-soft: var(--color-up-soft);
+  --color-down: var(--color-down);
+  --color-down-soft: var(--color-down-soft);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+  --color-danger: var(--color-danger);
+  --color-focus-ring: var(--color-focus-ring);
+  --font-sans: var(--font-sans);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg text-text font-sans antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* RTL/LTR handled at <html dir> level by the i18n provider. */
+[dir='rtl'] body {
+  letter-spacing: 0;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+}
+
+/* Focus visibility for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Components                                                          */
+/* ------------------------------------------------------------------ */
+
+.card {
+  @apply rounded-xl border border-border bg-surface shadow-sm;
+}
+
+.card-hover {
+  @apply transition-colors duration-150 hover:border-border-strong;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium
+    transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50
+    focus-visible:outline-2 focus-visible:outline-offset-2;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:opacity-90;
+}
+
+.btn-secondary {
+  @apply border border-border-strong bg-surface text-text hover:bg-surface-2;
+}
+
+.btn-ghost {
+  @apply text-text-secondary hover:bg-surface-2 hover:text-text;
+}
+
+.input {
+  @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text
+    placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30;
+}
+
+.label {
+  @apply mb-1 block text-sm font-medium text-text-secondary;
+}
+
+/* Subtle flash for genuinely updated prices (prefers-reduced-motion aware) */
+@keyframes price-flash-up {
+  from { background-color: var(--color-up-soft); }
+  to { background-color: transparent; }
+}
+@keyframes price-flash-down {
+  from { background-color: var(--color-down-soft); }
+  to { background-color: transparent; }
+}
+.price-flash-up {
+  animation: price-flash-up 1.2s ease-out;
+}
+.price-flash-down {
+  animation: price-flash-down 1.2s ease-out;
+}
+
+/* Skeleton loading */
+.skeleton {
+  @apply animate-pulse rounded-md bg-surface-3;
+}
+
+/* Scrollbar (subtle) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Numbers keep tabular alignment in tables */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Persian digits helper — spans get fa digit rendering via lang attribute */
+:lang(fa) {
+  font-feature-settings: 'ss01';
+}

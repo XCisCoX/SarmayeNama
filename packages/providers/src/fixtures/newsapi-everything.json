@@ -1,0 +1,22 @@
+{
+  "status": "ok",
+  "totalResults": 3,
+  "articles": [
+    {
+      "source": { "id": null, "name": "Zoomit.ir" },
+      "author": null,
+      "title": "آیا بیت کوین به بخش پایانی بازار خرسی نزدیک می‌شود؟",
+      "description": "تحلیل وضعیت بازار ارزهای دیجیتال",
+      "url": "https://www.zoomit.ir/example/bitcoin",
+      "publishedAt": "2026-08-02T08:00:00Z"
+    },
+    {
+      "source": { "id": null, "name": "BBC News" },
+      "author": "Author Name",
+      "title": "Gold prices hit record high",
+      "description": null,
+      "url": "https://www.bbc.com/example/gold",
+      "publishedAt": "2026-08-02T07:30:00Z"
+    }
+  ]
+}

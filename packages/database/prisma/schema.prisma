@@ -1,0 +1,279 @@
+// SarmayeNama — database schema
+// PostgreSQL, Prisma ORM. All monetary values are NUMERIC (high precision),
+// never floating point.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Providers
+// ---------------------------------------------------------------------------
+
+model Provider {
+  id                   String   @id @default(cuid())
+  code                 String   @unique
+  displayName          String
+  description          String?
+  assetClasses         String[]
+  authType             String   @default("none") // none | query_param | header
+  baseUrl              String
+  enabled              Boolean  @default(true)
+  isDefault            Boolean  @default(false)
+  delayLabel           String   @default("Live") // Live | Delayed | Daily reference rate
+  refreshIntervalMs    Int?
+  dailyQuota           Int?
+  attributionRequired  Boolean  @default(false)
+  attributionText      String?
+  fallbackProviderCode String?
+  config               Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  assets       ProviderAsset[]
+  quotes       LatestQuote[]
+  snapshots    QuoteSnapshot[]
+  healthChecks ProviderHealthCheck[]
+  usage        ProviderUsage[]
+  runs         IngestionRun[]
+  candles      OhlcCandle[]
+
+  @@index([enabled])
+}
+
+// ---------------------------------------------------------------------------
+// Assets
+// ---------------------------------------------------------------------------
+
+model Asset {
+  id              String   @id @default(cuid())
+  symbol          String   @unique
+  nameFa          String
+  nameEn          String
+  assetClass      String // iranian_currency | iranian_gold_coin | global_currency | precious_metal | cryptocurrency | iranian_stock | global_market | economic_indicator
+  market          String // iran | global | crypto | commodities | macro
+  quoteCurrency   String // TOMAN | RIAL | USD | EUR | IRR
+  unit            String
+  precision       Int      @default(0)
+  enabled         Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  icon            String?
+  isDerived       Boolean  @default(false)
+  derivedFrom     Json? // { assetSymbols: [], formulaFa, formulaEn }
+  descriptionFa   String?
+  descriptionEn   String?
+  externalIds     Json? // provider-code -> external symbol/id
+  firstCollectedAt DateTime?
+  historyNoteFa   String?
+  historyNoteEn   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  aliases         AssetAlias[]
+  providerAssets  ProviderAsset[]
+  quotes          LatestQuote[]
+  snapshots       QuoteSnapshot[]
+  candles         OhlcCandle[]
+
+  @@index([assetClass, enabled])
+  @@index([market])
+}
+
+model AssetAlias {
+  id      String @id @default(cuid())
+  assetId String
+  alias   String
+  asset   Asset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, alias])
+  @@index([alias])
+}
+
+model ProviderAsset {
+  id             String   @id @default(cuid())
+  assetId        String
+  providerId     String
+  externalSymbol String
+  enabled        Boolean  @default(true)
+  priority       Int      @default(100)
+  asset          Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  provider       Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, providerId])
+  @@index([providerId, externalSymbol])
+}
+
+// ---------------------------------------------------------------------------
+// Quotes
+// ---------------------------------------------------------------------------
+
+model LatestQuote {
+  id                String   @id @default(cuid())
+  assetId           String
+  providerId        String
+  price             Decimal  @db.Decimal(24, 8)
+  bid               Decimal? @db.Decimal(24, 8)
+  ask               Decimal? @db.Decimal(24, 8)
+  open              Decimal? @db.Decimal(24, 8)
+  high              Decimal? @db.Decimal(24, 8)
+  low               Decimal? @db.Decimal(24, 8)
+  previousClose     Decimal? @db.Decimal(24, 8)
+  changeAbsolute    Decimal? @db.Decimal(24, 8)
+  changePercent     Decimal? @db.Decimal(12, 6)
+  volume            Decimal? @db.Decimal(30, 8)
+  marketCap         Decimal? @db.Decimal(30, 8)
+  circulatingSupply Decimal? @db.Decimal(30, 8)
+  marketTimestamp   DateTime?
+  receivedAt        DateTime @default(now())
+  freshness         String   @default("live") // live | delayed | daily_reference | derived | cached | stale
+  rawChecksum       String?
+  rawMetadata       Json?
+  asset             Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  provider          Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, providerId])
+  @@index([assetId, freshness])
+  @@index([receivedAt])
+  @@index([providerId])
+}
+
+model QuoteSnapshot {
+  id                String   @id @default(cuid())
+  assetId           String
+  providerId        String
+  price             Decimal  @db.Decimal(24, 8)
+  bid               Decimal? @db.Decimal(24, 8)
+  ask               Decimal? @db.Decimal(24, 8)
+  open              Decimal? @db.Decimal(24, 8)
+  high              Decimal? @db.Decimal(24, 8)
+  low               Decimal? @db.Decimal(24, 8)
+  previousClose    Decimal? @db.Decimal(24, 8)
+  changeAbsolute   Decimal? @db.Decimal(24, 8)
+  changePercent    Decimal? @db.Decimal(12, 6)
+  volume           Decimal? @db.Decimal(30, 8)
+  marketCap        Decimal? @db.Decimal(30, 8)
+  circulatingSupply Decimal? @db.Decimal(30, 8)
+  marketTimestamp  DateTime?
+  receivedAt       DateTime @default(now())
+  freshness        String   @default("live")
+  rawChecksum      String?
+  rawMetadata      Json?
+  asset            Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  provider         Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  // One snapshot per asset+provider+market timestamp (dedup guard).
+  @@unique([assetId, providerId, marketTimestamp])
+  @@index([assetId, receivedAt])
+  @@index([assetId, marketTimestamp])
+  @@index([providerId])
+}
+
+// ---------------------------------------------------------------------------
+// OHLC candles (aggregated from snapshots and provider history)
+// ---------------------------------------------------------------------------
+
+model OhlcCandle {
+  id           String   @id @default(cuid())
+  assetId      String
+  providerId   String?
+  interval     String // 5m | 15m | 1h | 1d | 1w | 1mo
+  startTime    DateTime
+  endTime      DateTime
+  open         Decimal  @db.Decimal(24, 8)
+  high         Decimal  @db.Decimal(24, 8)
+  low          Decimal  @db.Decimal(24, 8)
+  close        Decimal  @db.Decimal(24, 8)
+  volume       Decimal? @db.Decimal(30, 8)
+  sampleCount  Int      @default(0)
+  isFinal      Boolean  @default(false)
+  asset        Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  provider     Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
+  @@unique([assetId, interval, startTime])
+  @@index([assetId, interval, startTime, endTime])
+  @@index([assetId, interval, isFinal])
+}
+
+// ---------------------------------------------------------------------------
+// Observability
+// ---------------------------------------------------------------------------
+
+model ProviderHealthCheck {
+  id                  String   @id @default(cuid())
+  providerId          String
+  status              String // ok | degraded | down | circuit_open | quota_exhausted | not_configured
+  latencyMs           Int?
+  errorMessage        String?
+  checkedAt           DateTime @default(now())
+  consecutiveFailures Int      @default(0)
+  provider            Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, checkedAt])
+}
+
+model ProviderUsage {
+  id             String   @id @default(cuid())
+  providerId     String
+  date           String // YYYY-MM-DD
+  requestCount   Int      @default(0)
+  successCount   Int      @default(0)
+  failureCount   Int      @default(0)
+  lastRequestAt  DateTime?
+  provider       Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, date])
+}
+
+model IngestionRun {
+  id              String    @id @default(cuid())
+  providerId      String
+  jobType         String // quotes | history | aggregation | health | prune | tsetmc
+  status          String // started | success | failed | partial
+  startedAt       DateTime  @default(now())
+  finishedAt      DateTime?
+  assetsProcessed Int       @default(0)
+  quotesStored    Int       @default(0)
+  errorMessage    String?
+  metadata        Json?
+  provider        Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, startedAt])
+  @@index([jobType, startedAt])
+}
+
+model MarketSession {
+  id        String   @id @default(cuid())
+  market    String   @unique // iran_fx | tsetmc | forex | crypto | metals | commodities
+  isOpen    Boolean  @default(false)
+  opensAt   DateTime?
+  closesAt  DateTime?
+  timezone  String
+  checkedAt DateTime @default(now())
+  noteFa    String?
+  noteEn    String?
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json?
+  updatedAt DateTime @default(now())
+}
+
+/// Cached market news headlines (NewsAPI / Brave), fetched by the web app.
+model NewsItem {
+  id          String   @id @default(cuid())
+  title       String
+  url         String   @unique
+  description String?
+  source      String?
+  publishedAt DateTime?
+  lang        String   @default("fa")
+  fetchedAt   DateTime @default(now())
+
+  @@index([lang, fetchedAt])
+}
