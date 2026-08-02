@@ -126,7 +126,8 @@ async function main() {
     }
 
     // Provider mapping
-    for (const [providerCode, externalSymbol] of Object.entries(seed.providers ?? {})) {
+    const wantedMappings = Object.entries(seed.providers ?? {});
+    for (const [providerCode, externalSymbol] of wantedMappings) {
       const provider = await prisma.provider.findUnique({ where: { code: providerCode } });
       if (!provider) continue;
       await prisma.providerAsset.upsert({
@@ -137,6 +138,23 @@ async function main() {
           providerId: provider.id,
           externalSymbol,
           priority: providerCode === 'brsapi' ? 10 : providerCode === 'coingecko' ? 20 : 100,
+        },
+      });
+    }
+    // Remove stale mappings: the seed is the source of truth for
+    // asset→provider wiring (e.g. dropped fallback providers).
+    if (wantedMappings.length === 0) {
+      await prisma.providerAsset.deleteMany({ where: { assetId: asset.id } });
+    } else {
+      await prisma.providerAsset.deleteMany({
+        where: {
+          assetId: asset.id,
+          NOT: {
+            OR: wantedMappings.map(([providerCode, externalSymbol]) => ({
+              provider: { code: providerCode },
+              externalSymbol,
+            })),
+          },
         },
       });
     }

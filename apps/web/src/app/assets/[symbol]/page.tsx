@@ -4,7 +4,6 @@ import { cookies } from 'next/headers';
 import { normalizeLang, getDictionary, tpl, CATEGORIES } from '@sarmaye/shared';
 import { getAssetDetail } from '@/lib/server-data';
 import { AssetDetailClient } from '@/components/AssetDetailClient';
-import { Icon } from '@/components/Icon';
 
 interface Props {
   params: Promise<{ symbol: string }>;

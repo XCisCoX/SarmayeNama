@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ProviderContext, MarketDataProvider, LatestQuoteRequest, HistoricalRequest, ProviderHealth, AssetClass } from './types.js';
-import { fetchJson, ProviderError } from './http.js';
+import { fetchJson, ProviderError, ProviderRateLimitedError } from './http.js';
 import { quoteChecksum, toDecimalString, toIsoTimestamp } from './normalize.js';
 import type { NormalizedQuote, NormalizedHistoricalPoint } from '@sarmaye/shared';
 
@@ -83,20 +83,24 @@ export class AlphaVantageProvider implements MarketDataProvider {
     if (!this.key) throw new ProviderError('ALPHAVANTAGE_API_KEY is not configured', this.id, false);
     const qs = new URLSearchParams({ ...params, apikey: this.key });
     const raw = await fetchJson<unknown>(`${this.baseUrl}?${qs.toString()}`, this.id);
-    // Free-tier error shapes
+    // Free-tier error shapes: Information/Note = rate-limit advisories
+    // ("Please consider spreading out your free API requests…").
     const info = (raw as { Information?: string; Note?: string; 'Error Message'?: string });
     if (info.Information || info.Note) {
-      throw new ProviderError(
-        info.Information ?? info.Note ?? 'Alpha Vantage rate limited',
+      throw new ProviderRateLimitedError(
         this.id,
-        false,
-        429
+        (info.Information ?? info.Note ?? 'Alpha Vantage rate limited').slice(0, 200)
       );
     }
     if (info['Error Message']) {
       throw new ProviderError(info['Error Message'], this.id, false);
     }
     return raw;
+  }
+
+  /** Free tier allows ~1 request/second; pace multi-symbol loops. */
+  private async paced(symbols: number): Promise<void> {
+    if (symbols > 1) await new Promise((r) => setTimeout(r, 1200));
   }
 
   async getLatestQuotes(request: LatestQuoteRequest): Promise<NormalizedQuote[]> {

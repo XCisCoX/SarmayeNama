@@ -1,4 +1,4 @@
-import { okResponse, withRateLimit, errorResponse, withRequestId } from '@/lib/api-helpers';
+import { okResponse, withRateLimit, errorResponse } from '@/lib/api-helpers';
 import { runConversion } from '@/lib/server-data';
 import { ConverterQuerySchema } from '@sarmaye/shared';
 

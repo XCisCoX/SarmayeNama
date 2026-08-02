@@ -1,4 +1,4 @@
-import { okResponse, withRateLimit, errorResponse, withRequestId } from '@/lib/api-helpers';
+import { okResponse, withRateLimit, errorResponse } from '@/lib/api-helpers';
 import { getAssetHistory } from '@/lib/server-data';
 import { HistoryQuerySchema } from '@sarmaye/shared';
 
